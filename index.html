@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast-Reader Text Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        #outputText > span {
+            margin-right: 0.25em;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl mx-auto bg-gray-800 shadow-xl shadow-blue-500/10 rounded-2xl p-6 md:p-10 border border-gray-700">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-400">Fast-Reader Text Generator</h1>
+            <p class="text-gray-400 mt-2 text-lg">Jumble text while keeping the first few letters readable.</p>
+        </header>
+
+        <!-- Stats Section -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="stat-card bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Words</div>
+                <div id="wordCount" class="text-2xl font-bold text-blue-400">0</div>
+            </div>
+            <div class="stat-card bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Characters</div>
+                <div id="charCount" class="text-2xl font-bold text-green-400">0</div>
+            </div>
+            <div class="stat-card bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Jumbled</div>
+                <div id="jumbledCount" class="text-2xl font-bold text-purple-400">0</div>
+            </div>
+            <div class="stat-card bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Reading Time</div>
+                <div id="readingTime" class="text-2xl font-bold text-yellow-400">0s</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Area -->
+            <div class="flex flex-col h-full">
+                <label for="inputText" class="block text-lg font-semibold text-gray-300 mb-2">1. Paste your normal text here:</label>
+                <textarea
+                    id="inputText"
+                    rows="12"
+                    class="font-mono flex-1 w-full p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-200 placeholder-gray-500 transition duration-150 resize-none"
+                    placeholder="Type or paste your paragraph..."
+                ></textarea>
+                <button id="clearButton" class="mt-2 text-gray-400 hover:text-red-400 text-sm transition duration-200">
+                    Clear Text
+                </button>
+            </div>
+
+            <!-- Output Area -->
+            <div class="flex flex-col h-full">
+                <label for="outputText" class="block text-lg font-semibold text-gray-300 mb-2">2. Get your "fast-reader" text:</label>
+                <div
+                    id="outputText"
+                    class="font-mono flex-1 w-full p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-sm overflow-y-auto text-green-400"
+                >
+                    <span class="text-gray-600">Your jumbled text will appear here...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <label for="prefixLength" class="font-medium text-gray-300">Keep first:</label>
+                    <select id="prefixLength" class="rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2">
+                        <option value="2">2 letters</option>
+                        <option value="3" selected>3 letters</option>
+                        <option value="4">4 letters</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label for="intensityLevel" class="font-medium text-gray-300">Intensity:</label>
+                    <select id="intensityLevel" class="rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="preserveCase" checked class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <span class="text-gray-300 text-sm">Preserve case</span>
+                </label>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="regenerateButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out">
+                    🔄 Regenerate
+                </button>
+                <button id="copyButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out">
+                    📋 Copy
+                </button>
+            </div>
+        </div>
+
+        <!-- Sample Text Button -->
+        <div class="mt-4 text-center">
+            <button id="sampleButton" class="text-gray-400 hover:text-blue-400 text-sm underline transition duration-200">
+                Load sample text
+            </button>
+        </div>
+        
+        <!-- Message Box -->
+        <div id="messageBox" class="hidden fixed bottom-5 right-5 bg-blue-600 text-white py-3 px-5 rounded-lg shadow-xl transition-all duration-300 ease-in-out z-50">
+            Copied to clipboard!
+        </div>
+
+    </div>
+
+    <script>
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const prefixLengthSelect = document.getElementById('prefixLength');
+        const intensitySelect = document.getElementById('intensityLevel');
+        const preserveCaseCheck = document.getElementById('preserveCase');
+        const copyButton = document.getElementById('copyButton');
+        const clearButton = document.getElementById('clearButton');
+        const regenerateButton = document.getElementById('regenerateButton');
+        const sampleButton = document.getElementById('sampleButton');
+        const messageBox = document.getElementById('messageBox');
+        
+        const wordCount = document.getElementById('wordCount');
+        const charCount = document.getElementById('charCount');
+        const jumbledCount = document.getElementById('jumbledCount');
+        const readingTime = document.getElementById('readingTime');
+
+        const sampleText = "According to research at Cambridge University, it doesn't matter in what order the letters in a word are, the only important thing is that the first and last letters be at the right place. The rest can be a total mess and you can still read it without problem. This is because the human mind does not read every letter by itself but the word as a whole.";
+
+        // Main jumbling logic with intensity
+        function jumbleWord(word) {
+            const prefixLength = parseInt(prefixLengthSelect.value, 10);
+            const intensity = intensitySelect.value;
+            const preserveCase = preserveCaseCheck.checked;
+            
+            if (word.length <= prefixLength + 1) {
+                return word;
+            }
+
+            const punctuation = word.match(/[\.,!?;:]*$/);
+            const punctuationSuffix = punctuation ? punctuation[0] : '';
+            const coreWord = punctuationSuffix.length > 0 ? word.slice(0, -punctuationSuffix.length) : word;
+
+            if (coreWord.length <= prefixLength + 1) {
+                return word;
+            }
+
+            const prefix = coreWord.substring(0, prefixLength);
+            let middleAndEnd = coreWord.substring(prefixLength).split('');
+
+            // Apply intensity - determines how much to shuffle
+            let shuffleAmount = middleAndEnd.length;
+            if (intensity === 'low') {
+                shuffleAmount = Math.ceil(middleAndEnd.length * 0.5);
+            } else if (intensity === 'medium') {
+                shuffleAmount = Math.ceil(middleAndEnd.length * 0.75);
+            }
+
+            // Fisher-Yates shuffle
+            for (let i = middleAndEnd.length - 1; i >= middleAndEnd.length - shuffleAmount; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [middleAndEnd[i], middleAndEnd[j]] = [middleAndEnd[j], middleAndEnd[i]];
+            }
+
+            let result = prefix + middleAndEnd.join('') + punctuationSuffix;
+
+            // Preserve case if needed
+            if (preserveCase && coreWord[0] === coreWord[0].toUpperCase()) {
+                result = result.charAt(0).toUpperCase() + result.slice(1).toLowerCase();
+                if (coreWord === coreWord.toUpperCase() && coreWord.length > 1) {
+                    result = result.toUpperCase();
+                }
+            }
+
+            return result;
+        }
+
+        function updateOutput() {
+            const text = inputText.value;
+            const words = text.split(/(\s+)/);
+            
+            outputText.innerHTML = ''; 
+
+            if (text.trim().length === 0) {
+                outputText.innerHTML = '<span class="text-gray-600">Your jumbled text will appear here...</span>';
+                updateStats(0, 0, 0);
+                return;
+            }
+
+            let totalWords = 0;
+            let jumbledWords = 0;
+
+            words.forEach(word => {
+                if (/^\s+$/.test(word)) {
+                    const spaceElement = document.createElement('span');
+                    spaceElement.innerHTML = word.replace(/\n/g, '<br>');
+                    outputText.appendChild(spaceElement);
+                } else if (word.length > 0) {
+                    const originalWord = word;
+                    const jumbled = jumbleWord(word);
+                    const span = document.createElement('span');
+                    span.textContent = jumbled;
+                    outputText.appendChild(span);
+                    
+                    if (/[a-zA-Z]/.test(word)) {
+                        totalWords++;
+                        if (jumbled !== originalWord) {
+                            jumbledWords++;
+                        }
+                    }
+                }
+            });
+
+            updateStats(totalWords, text.length, jumbledWords);
+        }
+
+        function updateStats(words, chars, jumbled) {
+            wordCount.textContent = words;
+            charCount.textContent = chars;
+            jumbledCount.textContent = jumbled;
+            
+            // Average reading speed: 200-250 words per minute
+            const minutes = Math.ceil(words / 225);
+            readingTime.textContent = minutes > 0 ? `${minutes}m` : '0s';
+        }
+
+        function showMessage(text) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 2000);
+        }
+
+        // Event Listeners
+        inputText.addEventListener('input', updateOutput);
+        prefixLengthSelect.addEventListener('change', updateOutput);
+        intensitySelect.addEventListener('change', updateOutput);
+        preserveCaseCheck.addEventListener('change', updateOutput);
+
+        regenerateButton.addEventListener('click', () => {
+            updateOutput();
+            showMessage('Text regenerated!');
+        });
+
+        clearButton.addEventListener('click', () => {
+            inputText.value = '';
+            updateOutput();
+        });
+
+        sampleButton.addEventListener('click', () => {
+            inputText.value = sampleText;
+            updateOutput();
+        });
+
+        copyButton.addEventListener('click', () => {
+            const textToCopy = outputText.textContent;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            tempTextArea.style.position = 'absolute';
+            tempTextArea.style.left = '-9999px';
+            tempTextArea.style.top = '0';
+            
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showMessage('Copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                showMessage('Failed to copy');
+            }
+            
+            document.body.removeChild(tempTextArea);
+        });
+
+    </script>
+</body>
+</html>
